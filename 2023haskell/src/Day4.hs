@@ -3,29 +3,38 @@ module Day4 (part1, part2) where
 import Input
 import Lib
 
-parsed :: IO [([Int], [Int])]
+parsed :: IO [Int]
 parsed = do
   ls <- lines <$> fetchInput 2023 4 "day_4.txt"
-  return $ map (execParser cardP) ls
+  return $ map (wins . execParser cardP) ls
   where
     cardP = stringP "Card" *> wsP *> intP *> charP ':' *> wsP
             *> ((,) <$> numsP) <*> (stringP " |" *> wsP *> numsP)
     numsP = sepBy wsP intP
-
-wins :: ([Int], [Int]) -> Int
-wins (winning, ours) = length $ filter (`elem` winning) ours
+    wins (winning, ours) = length $ filter (`elem` winning) ours
 
 part1 :: IO ()
 part1 = do
   cards <- parsed
   print $ sum $ map toScore cards
   where
-    toScore x = let len = wins x
-                in if len > 0 then 2^(len-1) else 0 :: Int
+    toScore wins = if wins > 0 then 2^(wins-1) else 0 :: Int
+
+process :: Int -> [(Int, Int)] -> [Int] -> [Int]
+process i instances cards | i == length cards = map snd instances
+                          | otherwise = recurse
+  where
+    recurse =
+      let copies = [i+w | w <- [1..(cards !! i)]]
+          thisCopies = snd $ instances !! i
+          update = map (\(idx,x) ->
+                          if idx `elem` copies then (idx, x+thisCopies)
+                          else (idx, x)
+                      )
+      in process (i+1) (update instances) cards
 
 part2 :: IO ()
 part2 = do
-  cards <- map wins <$> parsed
-  let subCopies i = let subs = [i+w | w <- [1..(cards !! i)]]
-                    in 1 + sum (map subCopies subs) :: Int
-  print $ sum $ map subCopies [0..length cards - 1]
+  cards <- parsed
+  let instances = zip [0..] $ replicate (length cards) 1
+  print $ sum $ process 0 instances cards

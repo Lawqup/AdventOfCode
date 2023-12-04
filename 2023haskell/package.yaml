@@ -41,3 +41,4 @@ library:
   - exceptions
   - monad-logger
   - bytestring
+  - time

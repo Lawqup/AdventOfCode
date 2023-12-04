@@ -1,9 +1,9 @@
 module Lib
-    ( Parser(..), spanP, charP, stringP, notNull, intP, sepBy, execParser
+    ( Parser(..), spanP, charP, stringP, notNull, intP, sepBy, execParser, wsP
     ) where
 
 import Control.Applicative
-import Data.Char (isDigit)
+import Data.Char (isDigit, isSpace)
 import Data.Maybe (fromJust)
 
 newtype Parser a = Parser { runParser :: String -> Maybe (String, a) }
@@ -60,3 +60,6 @@ intP = f <$> notNull (spanP isDigit)
 
 sepBy :: Parser a -> Parser b -> Parser [b]
 sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
+
+wsP :: Parser String
+wsP = spanP isSpace

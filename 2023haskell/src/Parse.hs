@@ -1,15 +1,29 @@
 module Parse
-    ( Parser(..), spanP, charP, stringP, notNull, intP, sepBy, execParser, wsP
+    ( Parser(..),
+      execParser,
+      maybeExecParser,
+      spanP,
+      spanCharP,
+      charP,
+      stringP,
+      notNull,
+      intP,
+      digitP,
+      sepBy,
+      wsP
     ) where
 
 import Control.Applicative
-import Data.Char (isDigit, isSpace)
+import Data.Char (isDigit, isSpace, digitToInt)
 import Data.Maybe (fromJust)
 
 newtype Parser a = Parser { runParser :: String -> Maybe (String, a) }
 
 execParser :: Parser a -> String -> a
-execParser p s = snd $ fromJust $ runParser p s
+execParser p s = fromJust $ maybeExecParser p s
+
+maybeExecParser :: Parser a -> String -> Maybe a
+maybeExecParser p s = snd <$> runParser p s
 
 instance Functor Parser where
   fmap f (Parser p) = Parser $ \input -> do
@@ -33,13 +47,16 @@ spanP f = Parser $ \input ->
                      let (match, rest) = span f input
                      in Just (rest, match)
 
-charP :: Char -> Parser Char
-charP x = Parser f
+spanCharP :: (Char -> Bool) -> Parser Char
+spanCharP fpred = Parser f
   where
     f (y:ys)
-      | x == y = Just (ys, x)
+      | fpred y = Just (ys, y)
       | otherwise = Nothing
     f [] = Nothing
+
+charP :: Char -> Parser Char
+charP x = spanCharP (==x)
 
 stringP :: String -> Parser String
 stringP = traverse charP
@@ -54,9 +71,10 @@ notNull (Parser p) = Parser $ \input -> do
 
 
 intP :: Parser Int
-intP = f <$> notNull (spanP isDigit)
-  where
-    f = read
+intP = read <$> notNull (spanP isDigit)
+
+digitP :: Parser Int
+digitP = digitToInt <$> spanCharP isDigit
 
 sepBy :: Parser a -> Parser b -> Parser [b]
 sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []

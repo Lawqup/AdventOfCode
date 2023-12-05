@@ -1,8 +1,6 @@
 module Day2 (part1, part2) where
 
-import Input
 import Lib
-import Data.Maybe
 import Control.Applicative
 
 data Game = Game {gameId :: Int, gameDraws :: [(Int, Int, Int)] } deriving Show
@@ -31,7 +29,7 @@ gameP = Game <$> idP <*> drawsP
 parsed :: IO [Game]
 parsed = do
   ls <- lines <$> fetchInput 2023 2 "day_2.txt"
-  return (map (snd . fromJust . runParser gameP) ls)
+  return (map (execParser gameP) ls)
 
 part1 :: IO ()
 part1 = do

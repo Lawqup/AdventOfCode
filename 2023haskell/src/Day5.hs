@@ -2,7 +2,6 @@ module Day5 (part1, part2) where
 
 import Input
 import Lib
-import Debug.Trace
 
 data Entry = Entry Int Int Int deriving Show
 type Map = [Entry]
@@ -72,7 +71,6 @@ part2 = do
   (seeds, maps) <- parsed ((,) <$> (intP <* charP ' ') <*> intP)
   print $ minimum $ map (\x -> convert maps [x]) seeds
   where
-    convert (m:ms) prev = convert ms $ prev >>= (\x -> let a = x `applyRange` m
-                                                in traceShow a a)
+    convert (m:ms) prev = convert ms $ prev >>= (`applyRange` m)
     convert [] prev = minimum $ map fst prev
 

@@ -16,6 +16,7 @@ module Parse
 import Control.Applicative
 import Data.Char (isDigit, isSpace, digitToInt)
 import Data.Maybe (fromJust)
+import Data.Functor
 
 newtype Parser a = Parser { runParser :: String -> Maybe (String, a) }
 
@@ -69,9 +70,10 @@ notNull (Parser p) = Parser $ \input -> do
                                 then Nothing
                                 else Just (input', xs)
 
-
 intP :: Parser Int
-intP = read <$> notNull (spanP isDigit)
+intP = sigP <*> (read <$> notNull (spanP isDigit))
+  where
+    sigP = (charP '-' $> (*(-1)) ) <|> pure (*1)
 
 digitP :: Parser Int
 digitP = digitToInt <$> spanCharP isDigit

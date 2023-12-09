@@ -45,4 +45,4 @@ part2 = do
   (dirs, g) <- parsed
   let starts = filter ((=='A') . last) $ Map.keys g
       paths = map (travel ((=='Z') . last) (cycle dirs) g) starts
-  print $ foldr lcm 1 paths
+  print $ foldr1 lcm paths

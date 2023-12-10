@@ -1,4 +1,4 @@
-module Lib (module Parse, module Input, bench, windows) where
+module Lib (module Parse, module Input, bench, windows, replace, replace2) where
 import Parse
 import Input
 import Data.Time
@@ -14,3 +14,11 @@ bench func = do
 
 windows :: Int -> [a] -> [[a]]
 windows m = foldr (zipWith (:)) (repeat []) . take m . tails
+
+replace :: Int -> a -> [a] -> [a]
+replace i x xs = take i xs ++ [x] ++ drop (i+1) xs
+
+
+replace2 :: Int -> Int -> a -> [[a]] -> [[a]]
+replace2 r c x xs = let row = xs !! r
+                    in replace r (replace c x row) xs

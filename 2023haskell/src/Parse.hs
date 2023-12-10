@@ -10,7 +10,8 @@ module Parse
       intP,
       digitP,
       sepBy,
-      wsP
+      wsP,
+      untilP,
     ) where
 
 import Control.Applicative
@@ -73,7 +74,9 @@ notNull (Parser p) = Parser $ \input -> do
 intP :: Parser Int
 intP = sigP <*> (read <$> notNull (spanP isDigit))
   where
-    sigP = (charP '-' $> (*(-1)) ) <|> pure (*1)
+    sigP = (charP '-' $> (*(-1)) )
+           <|> (charP '+' $> (*1) )
+           <|> pure (*1)
 
 digitP :: Parser Int
 digitP = digitToInt <$> spanCharP isDigit
@@ -83,3 +86,7 @@ sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
 
 wsP :: Parser String
 wsP = spanP isSpace
+
+untilP :: Parser a -> Parser String
+untilP afterP = afterP $> "" <|>
+  ((:) <$> spanCharP (const True) <*> untilP afterP)

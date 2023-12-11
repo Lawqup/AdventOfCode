@@ -1,8 +1,7 @@
 module Day10 (part1, part2) where
 
 import Lib
-import Data.List (elemIndices, find, sort, nub, transpose)
-import Debug.Trace (traceShow, trace)
+import Data.List (elemIndices, find)
 import Data.Maybe (fromJust, isJust)
 
 parsed :: IO [[Char]]
@@ -28,7 +27,7 @@ validNeighbors x = case x of
                      'S' -> [UP, DOWN, LEFT, RIGHT]
                      _ -> undefined
 
-                 
+
 toPos :: Int -> Int -> Dir -> (Int, Int)
 toPos r c dir = case dir of
                   UP -> (r-1, c)
@@ -60,25 +59,6 @@ getLoop pipes = let start = head
                      else Nothing
 
 
-
-enclosed :: [(Int, Int)] -> Int
-enclosed xs =  abs
-              $ sum
-              $ zipWith (\(yc, xc) (yn, xn) -> xc * yn - yc * xn) xs
-              $ tail xs
-
-
-scale :: [[Char]] -> [[Char]]
-scale pipes = transpose . map scaleCol . transpose $ map scaleRow pipes
-  where
-    scaleRow row = row >>= expand True
-    scaleCol col = col >>= expand False
-
-    expand horizontal x = case (x, horizontal) of
-                            ('.', _) -> ['.', '.']
-                            _ -> [x, if horizontal then '-' else '|']
-
-
 showLoop :: [[Char]] -> [(Int, Int)] -> String
 showLoop pipes xs = unlines $ fill xs
   where
@@ -97,9 +77,14 @@ showLoop pipes xs = unlines $ fill xs
 
     maxRow = succ $ maximum $ map fst xs
     maxCol = succ $ maximum $ map snd xs
-                       
-                       
-      
+
+
+enclosed :: [(Int, Int)] -> Int
+enclosed loop = (doubleArea - length loop) `div` 2 + 1
+  where
+    doubleArea = abs . sum . map area . windows 2 $ loop ++ [head loop]
+    area [(x1, y1), (x2, y2)] = x1 * y2 - x2 * y1
+    area _ = undefined
 
 part1 :: IO ()
 part1 = do
@@ -108,7 +93,7 @@ part1 = do
 
 part2 :: IO ()
 part2 = do
-  pipes <- scale <$> parsed
-  putStrLn $ unlines pipes
+  pipes <- parsed
   let loop = getLoop pipes
   putStrLn $ showLoop pipes loop
+  print $ enclosed loop

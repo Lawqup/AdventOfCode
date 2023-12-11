@@ -3,6 +3,7 @@ module Day10 (part1, part2) where
 import Lib
 import Data.List (elemIndices, find)
 import Data.Maybe (fromJust, isJust)
+import Debug.Trace
 
 parsed :: IO [[Char]]
 parsed = do
@@ -79,15 +80,18 @@ showLoop pipes xs = unlines $ fill xs
     maxCol = succ $ maximum $ map snd xs
 
 
-enclosed :: [(Int, Int)] -> Int
-enclosed loop = length $ filter inside
+enclosed :: [[Char]] -> [(Int, Int)] -> Int
+enclosed pipes loop = length $ filter inside
   [(r, c) | r <- [0..maxRow], c <- [0..maxCol]]
   where
-    inside (r, c) = odd . length $ filter
-                    (\x@(r', c') ->  r' == r && c' < c && x `elem` loop) loop
+    inside (r, c) = (r, c) `notElem` loop
+                    && odd (length $ filter (\(r', c') ->  r' == r
+                                              && c' < c
+                                              && pipes !! r' !! c'
+                                              `elem` ['S', '|', 'L', 'J']) loop)
 
-    maxRow = succ $ maximum $ map fst loop
-    maxCol = succ $ maximum $ map snd loop
+    maxRow = maximum $ map fst loop
+    maxCol = maximum $ map snd loop
 
 part1 :: IO ()
 part1 = do
@@ -99,4 +103,4 @@ part2 = do
   pipes <- parsed
   let loop = getLoop pipes
   putStrLn $ showLoop pipes loop
-  print $ enclosed loop
+  print $ enclosed pipes loop

@@ -80,11 +80,14 @@ showLoop pipes xs = unlines $ fill xs
 
 
 enclosed :: [(Int, Int)] -> Int
-enclosed loop = (doubleArea - length loop) `div` 2 + 1
+enclosed loop = length $ filter inside
+  [(r, c) | r <- [0..maxRow], c <- [0..maxCol]]
   where
-    doubleArea = abs . sum . map area . windows 2 $ loop ++ [head loop]
-    area [(x1, y1), (x2, y2)] = x1 * y2 - x2 * y1
-    area _ = undefined
+    inside (r, c) = odd . length $ filter
+                    (\x@(r', c') ->  r' == r && c' < c && x `elem` loop) loop
+
+    maxRow = succ $ maximum $ map fst loop
+    maxCol = succ $ maximum $ map snd loop
 
 part1 :: IO ()
 part1 = do

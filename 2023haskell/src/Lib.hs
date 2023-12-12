@@ -1,8 +1,16 @@
-module Lib (module Parse, module Input, bench, windows, replace, replace2) where
+module Lib (
+  module Parse,
+  module Input,
+  bench,
+  windows,
+  replace,
+  replace2,
+  splitWhen) where
 import Parse
 import Input
 import Data.Time
-import Data.List (tails)
+import Data.List (tails, elemIndex)
+import Data.Maybe (fromMaybe)
 
 bench :: IO a -> IO ()
 bench func = do
@@ -22,3 +30,7 @@ replace i x xs = take i xs ++ [x] ++ drop (i+1) xs
 replace2 :: Int -> Int -> a -> [[a]] -> [[a]]
 replace2 r c x xs = let row = xs !! r
                     in replace r (replace c x row) xs
+
+splitWhen :: Eq a => a -> [a] -> ([a], [a])
+splitWhen x xs = splitAt (fromMaybe (length xs) $ elemIndex x xs) xs
+  

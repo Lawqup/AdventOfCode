@@ -54,3 +54,4 @@ library:
   - bytestring
   - time
   - containers
+  - monad-memo

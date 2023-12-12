@@ -1,13 +1,21 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Day12 (part1, part2) where
 
 import Lib
+    ( charP,
+      execParser,
+      intP,
+      sepBy,
+      spanP,
+      wsP,
+      fetchInput)
 import Data.List (group, permutations, find, elemIndex, intercalate)
 import Data.Char (isSpace)
-import Debug.Trace (traceShow, trace, traceShowId)
-import Data.Bits (Bits(shiftR))
 import Data.Bifunctor (Bifunctor(bimap))
+
+import Control.Monad.Memo
 
 type Spring = ([Char], [Int])
 
@@ -20,27 +28,30 @@ parsed = do
     listP = sepBy (charP ',') intP
 
 validArrangements :: Spring -> Int
-validArrangements (conds, list) = nValid conds list
+validArrangements (cs, list) = startEvalMemo $ nValid 0 0 0
   where
-    nValid cs 0 = if isValid cs list then 1 else 0
-      
-    isValid ls cs = case (dropWhile (=='.') cs, ls) of
-                      ([], []) -> True
-                      (cs', l:ls') -> let (b, cs'') = splitWhen '.' cs'
-                                      in length b == l && isValid ls' cs''
-                      (_, _) -> False
+    nValid :: (MonadMemo (Int, Int, Int) Int m) => Int -> Int -> Int -> m Int 
+    nValid ci li run
+      | ci == length cs = if (li == length list && run == 0)
+                             || (li == length list - 1 && run == (list !! li))
+                          then return 1 else return 0
 
-    allConds [] = []
-    allConds cs = let nUnknown = length $ filter (=='?') cs
-                  in map (genRecord cs) [0 :: Int .. 2 ^ nUnknown - 1]
-                     
-    genRecord cs 0 = map (\x -> if x == '?' then '.' else x) cs
-
-    genRecord ('?' : cs) n = let x = if odd n then '#' else '.'
-                             in x : genRecord cs (n `shiftR` 1)
-
-    genRecord cs n = let (l, cs') = splitWhen '?' cs
-                     in l ++ genRecord cs' n
+      | otherwise = case cs !! ci of
+                      '.' -> waysOperational
+                      '#' -> waysBroken
+                      '?' -> do
+                        w1 <- waysOperational
+                        w2 <- waysBroken
+                        return (w1 + w2)
+                      _ -> undefined
+      where
+        waysOperational
+          | run == 0 = for3 memo nValid (ci+1) li run
+          | li < length list && run == (list !! li) =
+              for3 memo nValid (ci+1) (li+1) 0
+          | otherwise = return 0
+          
+        waysBroken = for3 memo nValid (ci+1) li (run+1)
 
 part1 :: IO ()
 part1 = do
@@ -54,5 +65,5 @@ part2 = do
                       (intercalate "?" . replicate 5)
                       (concat . replicate 5))
                  springs
-                 
+
   print $ sum $ map validArrangements springs'

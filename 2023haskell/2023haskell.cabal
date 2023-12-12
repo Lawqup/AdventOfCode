@@ -55,6 +55,7 @@ library
     , exceptions
     , http-conduit
     , monad-logger
+    , monad-memo
     , time
   default-language: Haskell2010
 

@@ -1,9 +1,9 @@
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 module Day10 (part1, part2) where
 
 import Lib
 import Data.List (elemIndices, find)
 import Data.Maybe (fromJust, isJust)
-import Debug.Trace
 
 parsed :: IO [[Char]]
 parsed = do

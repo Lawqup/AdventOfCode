@@ -1,21 +1,12 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE FlexibleContexts #-}
-
 module Day12 (part1, part2) where
 
 import Lib
-    ( charP,
-      execParser,
-      intP,
-      sepBy,
-      spanP,
-      wsP,
-      fetchInput)
-import Data.List (group, permutations, find, elemIndex, intercalate)
+import Data.List (intercalate)
 import Data.Char (isSpace)
 import Data.Bifunctor (Bifunctor(bimap))
 
-import Control.Monad.Memo
+import Data.Map (Map, (!))
+import qualified Data.Map as Map
 
 type Spring = ([Char], [Int])
 
@@ -26,32 +17,40 @@ parsed = do
   where
     recordP = spanP (not . isSpace)
     listP = sepBy (charP ',') intP
+    
+type Memo = Map (Int, Int, Int) Int
 
 validArrangements :: Spring -> Int
-validArrangements (cs, list) = startEvalMemo $ nValid 0 0 0
+validArrangements (cs, list) = snd $ nValidMemo Map.empty 0 0 0
   where
-    nValid :: (MonadMemo (Int, Int, Int) Int m) => Int -> Int -> Int -> m Int 
-    nValid ci li run
+    
+    nValidMemo memo ci li run
+      | Map.member key memo = (memo, memo ! key)
+      | otherwise = let (memo', r) = nValid memo ci li run
+                    in (Map.insert key r memo', r)
+      where key = (ci, li, run)
+      
+    nValid :: Memo -> Int -> Int -> Int -> (Memo, Int)
+    nValid memo ci li run
       | ci == length cs = if (li == length list && run == 0)
                              || (li == length list - 1 && run == (list !! li))
-                          then return 1 else return 0
+                          then (memo, 1) else (memo, 0)
 
       | otherwise = case cs !! ci of
-                      '.' -> waysOperational
-                      '#' -> waysBroken
-                      '?' -> do
-                        w1 <- waysOperational
-                        w2 <- waysBroken
-                        return (w1 + w2)
+                      '.' -> waysOperational memo
+                      '#' -> waysBroken memo
+                      '?' -> let (memo', w1) = waysOperational memo
+                                 (memo'', w2) = waysBroken memo'
+                             in (memo'', w1 + w2)
                       _ -> undefined
       where
-        waysOperational
-          | run == 0 = for3 memo nValid (ci+1) li run
+        waysOperational m
+          | run == 0 = nValidMemo m (ci+1) li run
           | li < length list && run == (list !! li) =
-              for3 memo nValid (ci+1) (li+1) 0
-          | otherwise = return 0
+              nValidMemo m (ci+1) (li+1) 0
+          | otherwise = (m, 0)
           
-        waysBroken = for3 memo nValid (ci+1) li (run+1)
+        waysBroken m = nValid m (ci+1) li (run+1)
 
 part1 :: IO ()
 part1 = do

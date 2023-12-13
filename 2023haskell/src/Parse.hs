@@ -87,6 +87,11 @@ sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
 wsP :: Parser String
 wsP = spanP isSpace
 
+nullifyP :: Parser a -> Parser a
+nullifyP (Parser p) = Parser $ \input -> do
+                               (_, xs) <- p input
+                               Just (input, xs)
+
 untilP :: Parser a -> Parser String
-untilP afterP = afterP $> "" <|>
-  ((:) <$> spanCharP (const True) <*> untilP afterP)
+untilP afterP = nullifyP afterP $> "" <|>
+  ((:) <$> spanCharP (const True) <*> untilP afterP) <|> pure ""

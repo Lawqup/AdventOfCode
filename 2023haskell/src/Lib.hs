@@ -5,6 +5,7 @@ module Lib (
   windows,
   replace,
   replace2,
+  delete,
   splitWhen) where
 import Parse
 import Input
@@ -25,6 +26,9 @@ windows m = foldr (zipWith (:)) (repeat []) . take m . tails
 
 replace :: Int -> a -> [a] -> [a]
 replace i x xs = take i xs ++ [x] ++ drop (i+1) xs
+
+delete :: Int -> [a] -> [a]
+delete i xs = take i xs ++ drop (i+1) xs
 
 
 replace2 :: Int -> Int -> a -> [[a]] -> [[a]]

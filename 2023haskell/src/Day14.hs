@@ -1,4 +1,3 @@
-
 module Day14 (part1, part2) where
 
 import Lib

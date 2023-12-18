@@ -1,27 +1,11 @@
-{-# LANGUAGE TupleSections #-}
 module Day18 (part1, part2) where
 
 import Lib
-import Text.ParserCombinators.ReadP (between)
 import Control.Applicative
-import Data.List (minimumBy, maximumBy)
-import Data.Function (on)
-
-import Data.Set (Set)
-import qualified Data.Set as Set
-import Debug.Trace (traceShowId, traceShow)
 
 type Instr = (Dir, Int)
 
 data Dir = UP | DOWN | LEFT | RIGHT deriving (Eq, Ord, Show)
-
-toPos :: Int -> Int -> Dir -> (Int, Int)
-toPos r c dir = case dir of
-                  UP -> (r-1, c)
-                  DOWN -> (r+1, c)
-                  LEFT -> (r, c-1)
-                  RIGHT -> (r, c+1)
-
 
 toPosN :: Int -> Int -> Int -> Dir -> (Int, Int)
 toPosN r c n dir = case dir of
@@ -53,51 +37,34 @@ parsed isHex = do
            <|> (UP <$ charP 'U')
            <|> (DOWN <$ charP 'D')
            <|> (LEFT <$ charP 'L')
-
-
-getTrench :: [Instr] -> Set (Int, Int)
-getTrench = trench 0 0
-  where
-    trench _ _ [] = Set.empty
-    trench r c ((dir, n):is) =
-      let (r', c') = toPosN r c n dir
-          new = [(r'', c'') |
-                  r'' <- [min r r'..max r r'],
-                  c'' <- [min c c'..max c c']]
-      in Set.union
-         (Set.fromList new)
-         (trench r' c' is)
                                       
 
 
-filled :: Set (Int, Int) -> Int
-filled trench = (1 + maxR - minR) * (1 + maxC - minC) -
-                length (fillOuter Set.empty minR minC)
+filled :: [Instr] -> Int
+filled is = let a = abs $ area (vs ++ [head vs])
+            in floor $ a + fromIntegral border / 2 + 1
   where
-    minR = minimum (Set.map fst trench) - 1
-    maxR = maximum (Set.map fst trench) + 1
-    minC = minimum (Set.map snd trench) - 1
-    maxC = maximum (Set.map snd trench) + 1
+    (border, vs) = foldl toVert (0, [(0, 0)]) is
 
-    fillOuter :: Set (Int, Int) -> Int -> Int -> Set (Int, Int)
-    fillOuter out r c
-      | Set.member (r, c) out
-        || Set.member (r, c) trench
-        || r < minR || r > maxR
-        || c < minC || c > maxC = out
-      | otherwise = let out' = Set.insert (r, c) out
-                    in foldl foldFill out'
-                       $ map (toPos r c) [UP, DOWN, LEFT, RIGHT]
-      where
-        foldFill out'' (r', c') = fillOuter out'' r' c'
+    toVert :: (Int, [(Int, Int)]) -> Instr -> (Int, [(Int, Int)])
+    toVert (b, rest) (dir, n) = let (x, y) = head rest
+                                    (y', x') = toPosN y x n dir
+                                in (b + n, (x', y') : rest)
+    
+    area :: [(Int, Int)] -> Double
+    area vs' = sum $ zipWith (\(x1, y1) (x2, y2) ->
+                                0.5 * (fromIntegral y1 + fromIntegral y2)
+                                * (fromIntegral x2 - fromIntegral x1)
+                             ) vs' (tail vs')
+
 
 part1 :: IO ()
 part1 = do
-  trench <- getTrench <$> parsed False
+  trench <- parsed False
   print $ filled trench
 
 part2 :: IO ()
 part2 = do
-  trench <- getTrench <$> parsed True
+  trench <- parsed True
   print $ filled trench
 

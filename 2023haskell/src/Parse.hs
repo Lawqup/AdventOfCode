@@ -12,6 +12,7 @@ module Parse
       sepBy,
       wsP,
       untilP,
+      betweenP,
     ) where
 
 import Control.Applicative
@@ -95,3 +96,6 @@ nullifyP (Parser p) = Parser $ \input -> do
 untilP :: Parser a -> Parser String
 untilP afterP = nullifyP afterP $> "" <|>
   ((:) <$> spanCharP (const True) <*> untilP afterP) <|> pure ""
+
+betweenP :: Parser a -> Parser String
+betweenP outerP = outerP *> untilP outerP <* outerP

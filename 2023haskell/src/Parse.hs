@@ -45,6 +45,11 @@ instance Alternative Parser where
   empty = Parser $ const Nothing
   (Parser p1) <|> (Parser p2) = Parser $ \input -> p1 input <|> p2 input
 
+instance Monad Parser where
+  (Parser p1) >>= f = Parser $ \input -> do
+                               (inp', a) <- p1 input
+                               runParser (f a) inp'
+
 spanP :: (Char -> Bool) -> Parser String
 spanP f = Parser $ \input ->
                      let (match, rest) = span f input

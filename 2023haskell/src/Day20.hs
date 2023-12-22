@@ -6,7 +6,7 @@ import qualified Data.Map as Map
 import Lib
 import Control.Applicative
 import Data.Functor (($>))
-import Debug.Trace (trace, traceShowId, traceShow)
+import Debug.Trace (traceShow)
 
 data Module = FlipFlop Bool [String]
             | Conjunction (Map String Signal) [String]
@@ -106,7 +106,7 @@ part1 = do
 part2 :: IO ()
 part2 = do
   mods <- parsed
-  -- print $ pushN 100000 mods
+  print $ pushN 100000 mods
   -- Theoretically the biggest bruh moment of AoC:
   print $ lcm (96234 - 92467)
     $ lcm (96072 - 92143)

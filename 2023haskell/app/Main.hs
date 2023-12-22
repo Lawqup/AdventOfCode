@@ -1,7 +1,7 @@
 module Main (main) where
 
-import Day14
+import Day22
 import Lib
 
 main :: IO ()
-main = bench part2
+main = bench part1

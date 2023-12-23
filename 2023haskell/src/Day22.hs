@@ -2,16 +2,11 @@
 module Day22 (part1, part2) where
 
 import Lib
-import Data.List (sort, sortOn)
-import Debug.Trace (traceShowId, traceShow)
+import Data.List (sortOn, elemIndex)
 
-import Data.Set (Set)
-import qualified Data.Set as Set
-
-
-import Data.Map (Map, (!), (!?))
+import Data.Map (Map, (!))
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromJust)
 
 type Coord = (Int, Int, Int)
 type Brick = [Coord]
@@ -55,8 +50,7 @@ settle bricks = let sorted = sortOn (minimum . map getZ) bricks
              -> (Map Int [Int], Map Int [Int], [Brick])
     moveDown under above bs i =
       let brick = bs !! i
-          below = [idx | idx <- Map.keys under,
-                    idx /= i,
+          below = [idx | idx <- [0.. i - 1],
                     any (\(ox, oy, oz) ->
                             any (\(cx, cy, cz) ->
                                     cz == oz + 1
@@ -84,5 +78,27 @@ part1 = do
     $ length
     $ filter (\brick -> all ((> 1) . length . (under !)) (above ! brick)) [0..length bricks - 1]
 
+chainReaction :: Map Int [Int] -> Map Int [Int] -> Int -> Int
+chainReaction under above toRemove = bfs under [toRemove]
+  where
+    bfs :: Map Int [Int] -> [Int] -> Int
+    bfs _ [] = 0
+    bfs u (i:is) = let children = above ! i
+                       u' = foldl foldRemove u children
+                       fallen = filter (null . (u' !)) children
+                       
+                   in length fallen + bfs u' (is ++ fallen)
+      where 
+        foldRemove :: Map Int [Int] -> Int -> Map Int [Int]
+        foldRemove u'' child = let parents = u'' ! child
+                                   idx = fromJust $ elemIndex i parents
+                                   parents' = delete idx parents
+                               in Map.insert child parents' u''
+        
 part2 :: IO ()
-part2 = undefined
+part2 = do
+  (under, above, bricks) <- settle <$> parsed
+  print
+    $ sum
+    $ map (chainReaction under above) [0..length bricks - 1]
+  

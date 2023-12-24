@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Day22
+import Day23
 import Lib
 
 main :: IO ()

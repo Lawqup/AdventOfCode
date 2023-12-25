@@ -4,4 +4,4 @@ import Day23
 import Lib
 
 main :: IO ()
-main = bench part2
+main = bench part1

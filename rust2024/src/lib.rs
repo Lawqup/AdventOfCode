@@ -4,6 +4,38 @@ use std::{fs, path::Path, rc::Rc, sync::Arc};
 pub mod day1;
 pub mod day2;
 pub mod day3;
+pub mod day4;
+pub mod day5;
+pub mod day6;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Dir {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+impl Dir {
+    /// Returns (delta_row, delta_col)
+    pub fn as_vec(&self) -> (isize, isize) {
+        match self {
+            Self::Up => (-1, 0),
+            Self::Down => (1, 0),
+            Self::Left => (0, -1),
+            Self::Right => (0, 1)
+        }
+    }
+
+    pub fn rotate_90(&self) -> Self {
+        match self {
+            Self::Up => Self::Right,
+            Self::Down => Self::Left,
+            Self::Left => Dir::Up,
+            Self::Right => Self::Down
+        }
+    }
+}
 
 pub fn get_input(day: u32) -> String {
     let local_path = format!("src/input/d{day}.txt");
@@ -27,7 +59,7 @@ pub fn get_input(day: u32) -> String {
         .build()
         .unwrap();
 
-    let text = client.get(url).send().unwrap().text().unwrap();
+    let text = client.get(url).send().unwrap().text().unwrap().trim().to_owned();
 
     fs::write(local_path, &text).unwrap();
 
@@ -77,13 +109,13 @@ impl<T: 'static> Parser<T> {
         Parser::from_raw_func(run_parser)
     }
 
-    pub fn and_then<U: 'static, V: 'static>(self, next: Parser<U>) -> Parser<V>
+    pub fn and_then<U: 'static, V: 'static>(self, right: Parser<U>) -> Parser<V>
     where
         T: FnOnce(U) -> V,
     {
         let run_parser = move |input: String| {
             let (rest, f) = self.exec_parser(input)?;
-            let (rest, a) = next.exec_parser(rest)?;
+            let (rest, a) = right.exec_parser(rest)?;
 
             Some((rest, f(a)))
         };
@@ -97,6 +129,11 @@ impl<T: 'static> Parser<T> {
 
     pub fn and_then_right<U: 'static>(self, right: Parser<U>) -> Parser<U> {
         self.map(|_left| |right| right).and_then(right)
+    }
+
+    // Returns both left and right as a tuple
+    pub fn chain<U: 'static>(self, right: Parser<U>) -> Parser<(T, U)> {
+        self.map(|l| |r| (l, r)).and_then(right)
     }
 
     /// Returns a parser that doesn't advance to the next tokens after parsing, allowing the

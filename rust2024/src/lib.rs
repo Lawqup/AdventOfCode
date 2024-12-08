@@ -1,5 +1,5 @@
 use reqwest::{blocking as req, cookie::Jar, Url};
-use std::{fs, path::Path, rc::Rc, sync::Arc};
+use std::{fs, path::Path, rc::Rc, str::FromStr, sync::Arc};
 
 pub mod day1;
 pub mod day2;
@@ -7,13 +7,15 @@ pub mod day3;
 pub mod day4;
 pub mod day5;
 pub mod day6;
+pub mod day7;
+pub mod day8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 impl Dir {
@@ -23,7 +25,7 @@ impl Dir {
             Self::Up => (-1, 0),
             Self::Down => (1, 0),
             Self::Left => (0, -1),
-            Self::Right => (0, 1)
+            Self::Right => (0, 1),
         }
     }
 
@@ -32,7 +34,7 @@ impl Dir {
             Self::Up => Self::Right,
             Self::Down => Self::Left,
             Self::Left => Dir::Up,
-            Self::Right => Self::Down
+            Self::Right => Self::Down,
         }
     }
 }
@@ -59,7 +61,14 @@ pub fn get_input(day: u32) -> String {
         .build()
         .unwrap();
 
-    let text = client.get(url).send().unwrap().text().unwrap().trim().to_owned();
+    let text = client
+        .get(url)
+        .send()
+        .unwrap()
+        .text()
+        .unwrap()
+        .trim()
+        .to_owned();
 
     fs::write(local_path, &text).unwrap();
 
@@ -94,10 +103,10 @@ impl<T: 'static> Parser<T> {
     where
         F: Fn(T) -> U + 'static,
     {
-        self.map_fallible(move |parsed| Some(func(parsed)))
+        self.filter_map(move |parsed| Some(func(parsed)))
     }
 
-    pub fn map_fallible<F, U: 'static>(self, func: F) -> Parser<U>
+    pub fn filter_map<F, U: 'static>(self, func: F) -> Parser<U>
     where
         F: Fn(T) -> Option<U> + 'static,
     {
@@ -206,6 +215,15 @@ impl<T: 'static> Parser<T> {
             .and_then(sep.and_then_right(self).repeat())
             .or::<Vec<T>>(p_empty(Vec::new())) // In the case that the last element fails
     }
+
+    // Returns left and right strings concatted
+    pub fn concat<U>(self, right: Parser<U>) -> Parser<String>
+    where
+        T: ToString,
+        U: ToString + 'static,
+    {
+        self.map(|l| move |r: U| l.to_string() + &r.to_string()).and_then(right)
+    }
 }
 
 /// Tries to parse a single character at the start of th se input given a fn
@@ -262,8 +280,25 @@ pub fn p_string(s: &str) -> Parser<String> {
     Parser::from_raw_func(run_parser)
 }
 
+pub fn p_int<T: num::Integer + FromStr + 'static>() -> Parser<T> {
+    p_while(|c| c.is_ascii_digit()).filter_map(|xs| xs.parse::<T>().ok())
+}
+
+pub fn p_float<T: num::Float + FromStr + 'static>() -> Parser<T> {
+    let p_dig = p_while(|c| c.is_ascii_digit());
+    p_dig
+        .clone()
+        .concat(p_char('.'))
+        .concat(p_dig)
+        .filter_map(|xs| xs.parse::<T>().ok())
+}
+
 pub fn p_i32() -> Parser<i32> {
-    p_while(|c| c.is_ascii_digit()).map_fallible(|xs| xs.parse::<i32>().ok())
+    p_int()
+}
+
+pub fn p_u64() -> Parser<u64> {
+    p_int()
 }
 
 #[cfg(test)]

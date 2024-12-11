@@ -8,7 +8,7 @@ pub struct GaurdState {
 }
 
 pub fn get_next_move(grid: &Vec<Vec<char>>, gaurd: &GaurdState) -> Option<GaurdState> {
-    let (dr, dc) = gaurd.dir.as_vec();
+    let (dr, dc) = gaurd.dir.to_vec();
     let new_r = gaurd.row.checked_add_signed(dr)?;
     let new_c = gaurd.col.checked_add_signed(dc)?;
 

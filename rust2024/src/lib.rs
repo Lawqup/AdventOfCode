@@ -1,5 +1,5 @@
 use reqwest::{blocking as req, cookie::Jar, Url};
-use std::{fs, path::Path, rc::Rc, str::FromStr, sync::Arc};
+use std::{fs, ops::Add, path::Path, rc::Rc, str::FromStr, sync::Arc};
 
 pub mod day1;
 pub mod day2;
@@ -10,6 +10,7 @@ pub mod day6;
 pub mod day7;
 pub mod day8;
 pub mod day9;
+pub mod day10;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir {
@@ -21,7 +22,7 @@ pub enum Dir {
 
 impl Dir {
     /// Returns (delta_row, delta_col)
-    pub fn as_vec(&self) -> (isize, isize) {
+    pub fn to_vec(&self) -> (isize, isize) {
         match self {
             Self::Up => (-1, 0),
             Self::Down => (1, 0),
@@ -37,6 +38,10 @@ impl Dir {
             Self::Left => Dir::Up,
             Self::Right => Self::Down,
         }
+    }
+
+    pub fn iter() -> impl Iterator<Item = Self> {
+        vec![Self::Up, Self::Down, Self::Left, Self::Right].into_iter()
     }
 }
 

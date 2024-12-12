@@ -1,5 +1,5 @@
 use reqwest::{blocking as req, cookie::Jar, Url};
-use std::{fs, ops::Add, path::Path, rc::Rc, str::FromStr, sync::Arc};
+use std::{fs, path::Path, rc::Rc, str::FromStr, sync::Arc};
 
 pub mod day1;
 pub mod day2;
@@ -11,6 +11,7 @@ pub mod day7;
 pub mod day8;
 pub mod day9;
 pub mod day10;
+pub mod day11;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir {

@@ -19,7 +19,7 @@ pub fn th_score(
         return 1;
     }
 
-    return Dir::iter()
+    return Dir::into_iter()
         .filter_map(|dir| {
             let (dr, dc) = dir.to_vec();
             let nr = ri.checked_add_signed(dr)?;
@@ -49,7 +49,7 @@ pub fn th_rating(
         return 1;
     }
 
-    let rating =  Dir::iter()
+    let rating =  Dir::into_iter()
         .filter_map(|dir| {
             let (dr, dc) = dir.to_vec();
             let nr = ri.checked_add_signed(dr)?;

@@ -1,7 +1,10 @@
 use reqwest::{blocking as req, cookie::Jar, Url};
-use std::{fs, path::Path, rc::Rc, str::FromStr, sync::Arc};
+use std::{fs, ops::Add, path::Path, rc::Rc, str::FromStr, sync::Arc};
 
 pub mod day1;
+pub mod day10;
+pub mod day11;
+pub mod day12;
 pub mod day2;
 pub mod day3;
 pub mod day4;
@@ -10,8 +13,6 @@ pub mod day6;
 pub mod day7;
 pub mod day8;
 pub mod day9;
-pub mod day10;
-pub mod day11;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir {
@@ -32,6 +33,13 @@ impl Dir {
         }
     }
 
+    pub fn translate(&self, (ri, ci): (usize, usize)) -> Option<(usize, usize)> {
+        let (dr, dc) = self.to_vec();
+
+        ri.checked_add_signed(dr)
+            .and_then(|r| ci.checked_add_signed(dc).map(|c| (r, c)))
+    }
+
     pub fn rotate_90(&self) -> Self {
         match self {
             Self::Up => Self::Right,
@@ -41,8 +49,12 @@ impl Dir {
         }
     }
 
-    pub fn iter() -> impl Iterator<Item = Self> {
+    pub fn into_iter() -> impl Iterator<Item = Self> {
         vec![Self::Up, Self::Down, Self::Left, Self::Right].into_iter()
+    }
+
+    pub fn translated_iter(pos: (usize, usize)) -> impl Iterator<Item = (usize, usize)> {
+        Self::into_iter().filter_map(move |dir| dir.translate(pos))
     }
 }
 
@@ -229,7 +241,8 @@ impl<T: 'static> Parser<T> {
         T: ToString,
         U: ToString + 'static,
     {
-        self.map(|l| move |r: U| l.to_string() + &r.to_string()).and_then(right)
+        self.map(|l| move |r: U| l.to_string() + &r.to_string())
+            .and_then(right)
     }
 }
 

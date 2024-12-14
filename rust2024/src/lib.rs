@@ -1,11 +1,12 @@
 use reqwest::{blocking as req, cookie::Jar, Url};
-use std::{fs, ops::Add, path::Path, rc::Rc, str::FromStr, sync::Arc};
+use std::{fs, ops::{Add, Neg}, path::Path, rc::Rc, str::FromStr, sync::Arc};
 
 pub mod day1;
 pub mod day10;
 pub mod day11;
 pub mod day12;
 pub mod day13;
+pub mod day14;
 pub mod day2;
 pub mod day3;
 pub mod day4;
@@ -301,8 +302,12 @@ pub fn p_string(s: &str) -> Parser<String> {
     Parser::from_raw_func(run_parser)
 }
 
-pub fn p_int<T: num::Integer + FromStr + 'static>() -> Parser<T> {
+pub fn p_uint<T: num::Integer + FromStr + 'static>() -> Parser<T> {
     p_while(|c| c.is_ascii_digit()).filter_map(|xs| xs.parse::<T>().ok())
+}
+
+pub fn p_int<T: num::Integer + FromStr + 'static + Neg<Output = T>>() -> Parser<T> {
+    p_char('-').and_then_right(p_uint()).map(|v: T| -v).or::<T>(p_uint())
 }
 
 pub fn p_float<T: num::Float + FromStr + 'static>() -> Parser<T> {
@@ -319,7 +324,7 @@ pub fn p_i32() -> Parser<i32> {
 }
 
 pub fn p_u64() -> Parser<u64> {
-    p_int()
+    p_uint()
 }
 
 #[cfg(test)]
@@ -384,6 +389,10 @@ mod tests {
         let input = "a100b200";
 
         assert_eq!(parser.parse(input), None);
+
+        let input = "-100 200 300";
+
+        assert_eq!(parser.parse(input), Some(-100));
     }
 
     #[test]

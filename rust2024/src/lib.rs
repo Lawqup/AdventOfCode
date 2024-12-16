@@ -7,6 +7,7 @@ pub mod day11;
 pub mod day12;
 pub mod day13;
 pub mod day14;
+pub mod day15;
 pub mod day2;
 pub mod day3;
 pub mod day4;
@@ -94,6 +95,14 @@ pub fn get_input(day: u32) -> String {
     fs::write(local_path, &text).unwrap();
 
     text
+}
+
+pub fn grid_to_vec(input: &str) -> Vec<Vec<char>> {
+    input.lines().map(|line| line.chars().collect()).collect()
+}
+
+pub fn vec_to_string(vec: &Vec<Vec<char>>) -> String {
+    vec.iter().map(|row| row.iter().collect::<String>()).collect::<Vec<_>>().join("\n")
 }
 
 #[derive(Clone)]
